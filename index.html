@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首页 · CNUHS 校园新闻站</title>
+  <meta name="description" content="CNUHS 校园新闻、通知公告与活动报道">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <span class="hero-kicker">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none"/></svg>
+        CAMPUS NEWS CENTER
+      </span>
+      <h1>看见校园，<em>听见我们</em></h1>
+      <p>校园新闻、通知公告与活动报道，第一时间送达。记录每一个值得被记住的校园时刻。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="editor.html">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          撰写新闻
+        </a>
+        <a class="btn btn-ghost" href="#latest">浏览最新</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 栏目导览 -->
+  <section class="section" aria-label="新闻栏目">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">新闻栏目</h2>
+          <p class="section-sub">三个板块，覆盖校园大小事</p>
+        </div>
+      </div>
+      <div class="cat-grid" id="catGrid"></div>
+    </div>
+  </section>
+
+  <!-- 最新新闻 -->
+  <section class="section" id="latest" aria-label="最新新闻" style="padding-top: 10px;">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">最新动态</h2>
+          <p class="section-sub">最近发布的新闻与公告</p>
+        </div>
+      </div>
+      <div class="news-grid" id="newsGrid"></div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script src="js/markdown.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (function () {
+      var S = window.Site;
+      S.mountNav('home', 'CNUHS');
+      S.mountFileWarning();
+      S.renderFooter('CNUHS');
+
+      S.ready(function () {
+      var articles = S.getArticles();
+      var CATS = S.CATEGORIES;
+
+      // 栏目卡片（带计数与配色）
+      var colors = { campus: '#0891B2', notice: '#F59E0B', activity: '#22C55E' };
+      var icons = {
+        campus: '<path d="M4 20h16"/><path d="M6 20V9l6-5 6 5v11"/><path d="M10 20v-6h4v6"/>',
+        notice: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+        activity: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>'
+      };
+      S.qs('#catGrid').innerHTML = Object.keys(CATS).map(function (k) {
+        var count = articles.filter(function (a) { return a.category === k; }).length;
+        return (
+          '<a class="cat-card" style="--cat-color:' + colors[k] + '" href="list.html?cat=' + k + '">' +
+            '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="' + colors[k] + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icons[k] + '</svg>' +
+            '<h3 style="margin-top:12px">' + CATS[k].name + '</h3>' +
+            '<p>' + CATS[k].desc + '</p>' +
+            '<span class="cat-count">' + count + ' 篇文章</span>' +
+          '</a>'
+        );
+      }).join('');
+
+      // 最新新闻（前 6 条）
+      var latest = articles.slice(0, 6);
+      S.qs('#newsGrid').innerHTML = latest.length
+        ? latest.map(S.articleCard).join('')
+        : S.emptyState('还没有任何新闻', '点击右下角「新闻编辑」或下面的按钮，用 Markdown 写下第一篇报道');
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -12,7 +12,7 @@
   <div class="container">
     <div class="editor-head">
       <h1>新闻编辑</h1>
-      <p>使用 Markdown 撰写新闻，实时预览。文章保存在 <code>data/文章id.json</code>，通过服务器自动读写，无需任何授权。图片放到 <code>assets/img/</code> 目录后填写路径即可。</p>
+      <p>使用 Markdown 撰写新闻，实时预览。文章保存在 <code>data/文章id.json</code>，通过服务器自动读写，无需任何授权。图片放到 <code>assets/img/</code> 目录后填写文件名即可。</p>
     </div>
 
     <!-- 基本信息 -->
@@ -38,9 +38,9 @@
         <input id="fDate" type="date">
       </div>
       <div class="field">
-        <label for="fCover">封面图片路径</label>
-        <input id="fCover" type="text" placeholder="assets/img/news/example.jpg（留空显示占位图）">
-        <span class="hint">将图片放入 assets/img/ 目录，填写相对路径</span>
+        <label for="fCover">封面图片</label>
+        <input id="fCover" type="text" placeholder="example.jpg（只需文件名，自动存放于 assets/img/）">
+        <span class="hint">将图片放入 assets/img/ 目录，这里填写文件名或子路径，系统会自动添加 assets/img/ 前缀</span>
       </div>
       <div class="field field-full">
         <label for="fSummary">摘要</label>
@@ -82,7 +82,8 @@
     <div class="editor-actions">
       <button class="btn btn-dark" id="btnSave">保存并发布</button>
       <button class="btn btn-outline" id="btnPreview">在新窗口预览</button>
-      <button class="btn btn-danger" id="btnClear">清空表单</button>
+      <button class="btn btn-danger" id="btnDelete" style="display:none;">删除当前文章</button>
+      <button class="btn btn-outline" id="btnClear">清空表单</button>
     </div>
 
     <!-- 自动保存状态 -->
@@ -96,7 +97,7 @@
     <div class="section-head" style="margin-top: 26px;">
       <div>
         <h2 class="section-title">已发布文章</h2>
-        <p class="section-sub">data 文件夹中的全部文章。点「编辑」即可修改，保存后自动覆盖原文件</p>
+        <p class="section-sub">data 文件夹中的全部文章。点「编辑」即可修改，保存后自动覆盖原文件；点「删除」移除文章</p>
       </div>
     </div>
     <table class="manage-table" style="margin-bottom: 56px;">

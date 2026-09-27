@@ -66,11 +66,23 @@
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // 规范化封面路径：自动补全 assets/img/ 前缀（兼容旧数据）
+  function normalizeCover(cover) {
+    cover = String(cover || '').trim();
+    if (!cover) return '';
+    if (/^(https?:)?\/\//.test(cover) || cover.indexOf('data:') === 0 || cover.indexOf('assets/img/') === 0) {
+      return cover;
+    }
+    if (cover.charAt(0) === '/') return cover;
+    return 'assets/img/' + cover;
+  }
+
   // 封面：有图显示图；图片加载失败或无图显示 CSS 占位
   function coverHtml(a, cls) {
     var img = '<div class="card-cover ' + (cls || '') + '">';
     if (a.cover) {
-      img += '<img src="' + esc(a.cover) + '" alt="' + esc(a.title) + '" loading="lazy" ' +
+      var src = normalizeCover(a.cover);
+      img += '<img src="' + esc(src) + '" alt="' + esc(a.title) + '" loading="lazy" ' +
              'onerror="this.style.display=\'none\';this.parentNode.classList.add(\'noimg\')">';
     } else {
       img += '<div class="ph"></div>';

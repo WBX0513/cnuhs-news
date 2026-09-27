@@ -14,6 +14,7 @@
   function qs(s) { return document.querySelector(s); }
   function toast(msg) {
     var t = qs('#toast');
+    if (!t) return;
     t.textContent = msg;
     t.classList.add('show');
     clearTimeout(t._h);
@@ -21,6 +22,26 @@
   }
   function nowTime() {
     return new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  }
+
+  /* ============ 封面路径处理 ============ */
+  // 为封面路径自动添加 assets/img/ 前缀（绝对 URL / data: / 已带前缀 / 以 / 开头的除外）
+  function addCoverPrefix(cover) {
+    cover = (cover || '').trim();
+    if (!cover) return '';
+    if (/^(https?:)?\/\//.test(cover) || cover.indexOf('data:') === 0 || cover.indexOf('assets/img/') === 0) {
+      return cover;
+    }
+    if (cover.charAt(0) === '/') return cover;
+    return 'assets/img/' + cover;
+  }
+  // 剥离 assets/img/ 前缀，供编辑时在输入框内显示简洁路径
+  function stripCoverPrefix(cover) {
+    cover = cover || '';
+    if (cover.indexOf('assets/img/') === 0) {
+      return cover.slice('assets/img/'.length);
+    }
+    return cover;
   }
 
   /* ============ 服务器 API ============ */
@@ -69,9 +90,12 @@
       qs('#fCat').value = d.category || 'campus';
       qs('#fAuthor').value = d.author || '';
       qs('#fDate').value = d.date || new Date().toISOString().slice(0, 10);
-      qs('#fCover').value = d.cover || '';
+      qs('#fCover').value = stripCoverPrefix(d.cover || '');
       qs('#fSummary').value = d.summary || '';
       qs('#fContent').value = d.content || '';
+      // 恢复草稿若指向某篇已发布文章，则显示删除按钮
+      var delBtn = qs('#btnDelete');
+      if (delBtn) delBtn.style.display = editingId ? '' : 'none';
       return true;
     } catch (e) { return false; }
   }
@@ -89,7 +113,7 @@
       category: qs('#fCat').value,
       author: qs('#fAuthor').value.trim(),
       date: qs('#fDate').value || new Date().toISOString().slice(0, 10),
-      cover: qs('#fCover').value.trim(),
+      cover: addCoverPrefix(qs('#fCover').value),
       summary: qs('#fSummary').value.trim(),
       content: qs('#fContent').value
     };
@@ -101,9 +125,14 @@
     qs('#fCat').value = a ? (a.category || 'campus') : 'campus';
     qs('#fAuthor').value = a ? (a.author || '') : '';
     qs('#fDate').value = a ? (a.date || '') : new Date().toISOString().slice(0, 10);
-    qs('#fCover').value = a ? (a.cover || '') : '';
+    qs('#fCover').value = a ? stripCoverPrefix(a.cover) : '';
     qs('#fSummary').value = a ? (a.summary || '') : '';
     qs('#fContent').value = a ? (a.content || '') : '';
+
+    // 仅编辑已有文章时显示「删除当前文章」按钮
+    var delBtn = qs('#btnDelete');
+    if (delBtn) delBtn.style.display = editingId ? '' : 'none';
+
     renderPreview();
     saveDraft();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -126,12 +155,13 @@
   }
 
   function insertImage() {
-    var src = prompt('请输入图片路径（如 assets/img/news/example.jpg）：\n提示：请先把图片文件放入 assets/img/ 目录', 'assets/img/news/');
+    var src = prompt('请输入图片路径（如 example.jpg 或 news/example.jpg）：\n提示：请先把图片文件放入 assets/img/ 目录，系统会自动添加前缀', '');
     if (src === null) return;
+    src = addCoverPrefix(src);
     var desc = prompt('图片说明（alt 文本，可留空）：', '') || '';
     var ta = qs('#fContent');
     var pos = ta.selectionStart;
-    ta.setRangeText('![' + desc + '](' + src.trim() + ')', pos, pos, 'end');
+    ta.setRangeText('![' + desc + '](' + src + ')', pos, pos, 'end');
     ta.focus();
     renderPreview();
   }
@@ -170,6 +200,9 @@
       var r = await saveToServer(a);
       var existed = r.list.some(function (x) { return x.id === a.id && x.date === a.date; });
       editingId = a.id;
+      // 保存成功后若为已有文章，显示删除按钮
+      var delBtn = qs('#btnDelete');
+      if (delBtn) delBtn.style.display = editingId ? '' : 'none';
       clearDraft();
       renderManage(r.list);
       updateStatus(true);
@@ -180,6 +213,33 @@
       toast('保存失败：服务器未运行或不可达');
       return false;
     }
+  }
+
+  /* ============ 删除文章 ============ */
+  async function deleteArticle(id, title) {
+    var label = title || id;
+    if (!confirm('确定删除「' + label + '」？\n将删除 data/' + id + '.json 文件，此操作不可撤销。')) return false;
+    try {
+      await deleteFromServer(id);
+      // 若删除的正是当前正在编辑的文章，清空表单并隐藏删除按钮
+      if (editingId === id) {
+        editingId = null;
+        clearDraft();
+        fillForm(null);
+      }
+      renderManage();
+      toast('已删除：' + label);
+      return true;
+    } catch (e) {
+      toast('删除失败：服务器未运行或不可达');
+      return false;
+    }
+  }
+
+  function deleteCurrent() {
+    if (!editingId) { toast('当前没有正在编辑的已发布文章'); return; }
+    var title = qs('#fTitle').value.trim() || editingId;
+    deleteArticle(editingId, title);
   }
 
   /* ============ 管理表 ============ */
@@ -226,7 +286,7 @@
     try { list = await listArticles(); }
     catch (e) { toast('无法连接服务器'); return; }
     var a = list.filter(function (x) { return x.id === id; })[0];
-    if (!a) return;
+    if (!a) { toast('未找到该文章'); return; }
 
     if (act === 'view') {
       window.open('article.html?id=' + encodeURIComponent(id), '_blank');
@@ -235,13 +295,7 @@
       fillForm(a);
       toast('正在编辑：' + a.title + '，改完点「保存并发布」覆盖原文件');
     } else if (act === 'del') {
-      if (!confirm('确定删除「' + a.title + '」？\n将删除 data/' + id + '.json 文件。')) return;
-      try {
-        await deleteFromServer(id);
-        if (editingId === id) { editingId = null; clearDraft(); fillForm(null); }
-        renderManage();
-        toast('已删除');
-      } catch (e) { toast('删除失败：服务器未运行或不可达'); }
+      await deleteArticle(id, a.title);
     }
   }
 
@@ -320,6 +374,7 @@
     qs('#btnPreview').addEventListener('click', async function () {
       if (await save()) window.open('article.html?id=' + encodeURIComponent(readForm().id), '_blank');
     });
+    qs('#btnDelete').addEventListener('click', deleteCurrent);
     qs('#btnClear').addEventListener('click', function () {
       if (confirm('清空当前表单（未保存的内容将丢失）？')) fillForm(null);
     });

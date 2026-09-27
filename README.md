@@ -1,3 +1,4 @@
+[README.md](https://github.com/user-attachments/files/32697781/README.md)
 # cnuhs-news-node-js 校园新闻站（Node.js 版）
 
 Node.js 服务器 + 纯静态前台，**零依赖**（只用 Node 内置模块）。
@@ -5,13 +6,15 @@ Node.js 服务器 + 纯静态前台，**零依赖**（只用 Node 内置模块�
 
 ## 启动
 
-双击 `start-server.bat`（会自动打开浏览器）。
+双击 `启动新闻站-免安装.bat`（会自动打开浏览器）。
 
 或手动启动：
 
 ```powershell
-D:\nodejs\node.exe "C:\Users\az\Desktop\cnuhs-news-node-js\server.js"
+cd cnuhs-news
+.\node.exe server.js
 ```
+如果系统已装 Node.js，也可直接用 `node server.js`。
 
 然后访问 `http://localhost:8000/`。
 
@@ -24,7 +27,7 @@ D:\nodejs\node.exe "C:\Users\az\Desktop\cnuhs-news-node-js\server.js"
 
 文件夹里已自带 `node.exe`（绿色免安装），目标电脑**什么都不用装**：
 
-1. 把整个 `cnuhs-news-node-js` 文件夹拷到 U 盘/网盘（约 70 MB）
+1. 把整个 `cnuhs-news` 文件夹拷到 U 盘/网盘（约 70 MB）
 2. **跳过这三项不拷**：`node_modules`、`package.json`、`package-lock.json`（是打包工具的残留，无用）
 3. 目标电脑上双击 `启动新闻站-免安装.bat`——浏览器自动打开，即用
 
@@ -35,11 +38,40 @@ D:\nodejs\node.exe "C:\Users\az\Desktop\cnuhs-news-node-js\server.js"
 ## 使用
 
 1. 访问 `http://localhost:8000/editor.html`
-2. 填写标题、栏目、记者、日期、封面图路径、摘要，用 Markdown 写正文（草稿自动暂存）
+2. 填写标题、栏目、记者、日期、封面图、摘要，用 Markdown 写正文（草稿自动暂存）
 3. 点「保存并发布」→ 服务器立即写入 `data/<文章id>.json`，所有人可见
 
-编辑已有文章：文章页「编辑本文」按钮，或编辑器管理表里的「编辑」。
-删除同理，直接删掉对应的 json 文件。
+**编辑已有文章**：文章页「编辑本文」按钮，或编辑器下方管理表里的「编辑」。
+**删除文章**：编辑器下方管理表里的「删除」，或编辑该文章时点操作区的「删除当前文章」按钮（仅在编辑已有文章时出现）。
+
+### 封面图片
+
+封面输入框**只需填写文件名或子路径**（如 `example.jpg` 或 `news/example.jpg`），
+系统会自动补全为 `assets/img/example.jpg`。
+
+- 图片文件请放入 `assets/img/`（建议建 `assets/img/news/` 子目录归档）
+- 也支持填写完整的 `http(s)://` 外链、`data:`、以 `/` 开头的绝对路径（不会被加前缀）
+- 留空封面显示占位底图
+- 编辑旧文章时，输入框自动**去掉** `assets/img/` 前缀显示，便于替换
+
+### 发布日期
+
+发布日期不会自动变成今天：
+
+| 操作 | 日期字段 |
+|---|---|
+| 打开编辑器（无草稿） | 默认今天 |
+| 打开编辑器（有草稿） | 恢复草稿里的日期 |
+| 打开已有文章编辑 | 保留原发布日期，可手改 |
+| 点「清空表单」 | 重置为今天 |
+| 手动清空日期后保存 | 兜底用今天 |
+
+如需改为「每次保存都同步今天」或「只在新建时同步今天」，可修改 `js/editor.js` 的 `readForm()`。
+
+### Markdown 工具栏
+
+编辑区上方提供常用按钮：粗体、斜体、删除线、二级/三级标题、引用、无序/有序列表、
+行内代码、链接、图片、分割线、表格。插入图片时会自动补全 `assets/img/` 前缀。
 
 ## 文章存储
 
@@ -58,11 +90,6 @@ data/
 | POST | `/api/save` | 保存文章，body: `{"article": {...}}` |
 | POST | `/api/delete` | 删除文章，body: `{"id": "..."}` |
 
-## 图片
-
-放入 `assets/img/`（建议 `assets/img/news/`），编辑器里填相对路径
-如 `assets/img/news/example.jpg`。留空封面显示占位底图。
-
 ## 栏目
 
 - `campus` → 校园新闻
@@ -70,12 +97,3 @@ data/
 - `activity` → 活动报道
 
 修改站点名称：搜索各 HTML 中的 `CNUHS` 字样替换。
-
-## 与纯静态版（cnuhs-news）的区别
-
-| | 纯静态版 | Node 版 |
-|---|---|---|
-| 启动 | 双击 HTML 即可看（但读不到 data/） | 需先启动服务器 |
-| 编辑保存 | 浏览器文件夹授权（首次选择、重启后点一下恢复） | 完全自动，无授权 |
-| 双击 file:// 打开 | 前台读不到文章 | 不适用（统一走 http） |
-| 局域网他人编辑 | 需各自授权 | 直接访问即可编辑 |

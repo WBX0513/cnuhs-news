@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/32697781/README.md)
 # cnuhs-news-node-js 校园新闻站（Node.js 版）
 
 Node.js 服务器 + 纯静态前台，**零依赖**（只用 Node 内置模块）。

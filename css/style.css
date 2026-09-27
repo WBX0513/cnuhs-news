@@ -463,6 +463,43 @@ a:hover { color: var(--primary-dark); }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ============ 文章转图片（html-to-image） ============ */
+.article-tools { display: flex; align-items: center; gap: 8px; }
+
+#captureBtn[disabled] { opacity: .65; cursor: wait; }
+#captureBtn .spinner {
+  display: inline-block; width: 13px; height: 13px; border-radius: 50%;
+  border: 2px solid currentColor; border-top-color: transparent;
+  animation: cap-spin .7s linear infinite; margin-right: 4px;
+  vertical-align: -2px;
+}
+@keyframes cap-spin { to { transform: rotate(360deg); } }
+
+/* 截图时临时插入的水印（截图后自动移除） */
+.capture-watermark {
+  margin-top: 36px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+}
+.capture-watermark svg { color: var(--primary); flex: none; }
+.capture-watermark .wm-text {
+  display: flex; flex-direction: column; line-height: 1.25;
+  text-align: left;
+}
+.capture-watermark .wm-brand {
+  font-family: var(--font-serif);
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  letter-spacing: .06em;
+}
+.capture-watermark .wm-meta {
+  font-size: 11.5px; color: var(--muted); letter-spacing: .18em;
+}
+
 /* ============ 响应式 ============ */
 @media (max-width: 1024px) {
   .article-layout { grid-template-columns: 1fr; }

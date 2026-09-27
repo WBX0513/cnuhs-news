@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>栏目列表 · CNUHS 校园新闻站</title>
+  <title>全部文章 · CNUHS 校园新闻站</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 
   <div class="page-banner">
     <div class="container">
-      <h1 id="pageTitle">栏目</h1>
+      <h1 id="pageTitle">全部文章</h1>
       <p id="pageDesc"></p>
     </div>
   </div>
@@ -34,28 +34,48 @@
       S.renderFooter('CNUHS');
 
       var CATS = S.CATEGORIES;
+
+      // 读取 URL 参数：?cat=all 或省略 → 显示全部
       var cat = new URLSearchParams(location.search).get('cat');
-      if (!CATS[cat]) cat = 'campus';
+      if (cat !== 'all' && !CATS[cat]) cat = 'all';
+      var isAll = cat === 'all';
 
-      // 导航高亮 + 标题
-      var navLink = S.qs('.nav-link[href="list.html?cat=' + cat + '"]');
-      if (navLink) navLink.classList.add('active');
-      S.qs('#pageTitle').textContent = CATS[cat].name;
-      S.qs('#pageDesc').textContent = CATS[cat].desc;
-      document.title = CATS[cat].name + ' · CNUHS 校园新闻站';
+      // 导航高亮（“全部”无对应导航项，保持不高亮）
+      if (!isAll) {
+        var navLink = S.qs('.nav-link[href="list.html?cat=' + cat + '"]');
+        if (navLink) navLink.classList.add('active');
+      }
 
-      // 栏目切换标签
-      S.qs('#catTabs').innerHTML = Object.keys(CATS).map(function (k) {
-        return '<a class="cat-tab' + (k === cat ? ' active' : '') + '" href="list.html?cat=' + k + '">' + CATS[k].name + '</a>';
-      }).join('') + '<a class="cat-tab" href="index.html">全部</a>';
+      // 页面标题
+      if (isAll) {
+        S.qs('#pageTitle').textContent = '全部文章';
+        S.qs('#pageDesc').textContent = '校园新闻 · 通知公告 · 活动报道，一网打尽';
+        document.title = '全部文章 · CNUHS 校园新闻站';
+      } else {
+        S.qs('#pageTitle').textContent = CATS[cat].name;
+        S.qs('#pageDesc').textContent = CATS[cat].desc;
+        document.title = CATS[cat].name + ' · CNUHS 校园新闻站';
+      }
+
+      // 栏目切换标签：全部 + 三个类别
+      S.qs('#catTabs').innerHTML =
+        '<a class="cat-tab' + (isAll ? ' active' : '') + '" href="list.html?cat=all">全部</a>' +
+        Object.keys(CATS).map(function (k) {
+          return '<a class="cat-tab' + (k === cat ? ' active' : '') + '" href="list.html?cat=' + k + '">' + CATS[k].name + '</a>';
+        }).join('');
 
       // 文章列表
       S.ready(function () {
-      var list = S.getArticles().filter(function (a) { return a.category === cat; });
-      S.qs('#listCount').textContent = '共 ' + list.length + ' 篇';
-      S.qs('#newsGrid').innerHTML = list.length
-        ? list.map(S.articleCard).join('')
-        : S.emptyState('本栏目暂无文章', '去「新闻编辑」页面为本栏目写一篇文章吧');
+        var all = S.getArticles();
+        var list = isAll ? all : all.filter(function (a) { return a.category === cat; });
+
+        S.qs('#listCount').textContent = '共 ' + list.length + ' 篇';
+        S.qs('#newsGrid').innerHTML = list.length
+          ? list.map(S.articleCard).join('')
+          : S.emptyState(
+              isAll ? '还没有任何文章' : '本栏目暂无文章',
+              '去「新闻编辑」页面写一篇文章吧'
+            );
       });
     })();
   </script>
